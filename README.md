@@ -1,4 +1,5 @@
 # OSIntPy
+<img width="1920" height="1462" alt="FireShot Capture 009 - OSINT Intelligence Platform -  localhost" src="https://github.com/user-attachments/assets/dda33943-a49f-4380-a25d-6d18761f9c8d" />
 
 ## Description
 OSIntPy is an Open Source Intelligence (OSINT) tool designed to gather and analyze publicly available information from various sources.
