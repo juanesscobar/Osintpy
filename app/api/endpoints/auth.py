@@ -19,6 +19,33 @@ USERS = {
     }
 }
 
+# OAuth2 scheme for JWT tokens
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
+
+
+def get_current_user(token: str = Depends(oauth2_scheme)):
+    """Dependency to get current user from JWT token"""
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+
+    user = USERS.get(username)
+    if user is None:
+        raise credentials_exception
+
+    return username
+
+
 @router.post("/login")
 async def login(credentials: HTTPBasicCredentials = Depends(security)):
     """Login endpoint with basic auth"""
@@ -49,32 +76,6 @@ async def read_users_me(current_user: str = Depends(get_current_user)):
         "username": user["username"],
         "full_name": user["full_name"]
     }
-
-def get_current_user(token: str = Depends(oauth2_scheme)):
-    """Dependency to get current user from JWT token"""
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-
-    try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-        username: str = payload.get("sub")
-        if username is None:
-            raise credentials_exception
-    except JWTError:
-        raise credentials_exception
-
-    user = USERS.get(username)
-    if user is None:
-        raise credentials_exception
-
-    return username
-
-# OAuth2 scheme for JWT tokens
-from fastapi.security import OAuth2PasswordBearer
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 # Re-export for use in other modules
 __all__ = ["get_current_user", "oauth2_scheme"]
